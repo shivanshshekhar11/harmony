@@ -4,4 +4,15 @@
   <input type="text" name="q" placeholder="Search rooms" />
 </form>
 
+{% if request.user.is_authenticated %}
+
+<a href="{% url 'logout' %}">Log Out</a>
+
+{% else %}
+
+<a href="{% url 'login' %}">Log In</a>
+<a href="{% url 'register' %}">Sign Up</a>
+
+{% endif %}
+
 <hr />
