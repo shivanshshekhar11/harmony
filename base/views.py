@@ -68,13 +68,23 @@ def registerPage(request):
     return render(request, 'base/login_register.html', context)
 
 
+def userProfile(request, id):
+    user = User.objects.get(id=id)
+    rooms = user.room_set.all()
+    messages = user.message_set.all()
+
+    return render(request, 'base/user.html', {'rooms': rooms, 'room_messages': messages, 'user': user})
+
+
 def home(request):
     q = request.GET.get('q') if request.GET.get('q') != None else ''
 
     topics = Topic.objects.all()
     rooms = Room.objects.filter(Q(topic__name__icontains=q) | Q(name__icontains=q) | Q(
         host__username__icontains=q) | Q(description__icontains=q))
-    return render(request, 'base/home.html', {'rooms': rooms, 'topics': topics, 'room_count': rooms.count()})
+    messages = Message.objects.filter(Q(room__topic__name__icontains=q))
+
+    return render(request, 'base/home.html', {'rooms': rooms, 'topics': topics, 'room_count': rooms.count(), 'room_messages': messages})
 
 
 def room(request, id):
@@ -101,7 +111,9 @@ def createRoom(request):
     if request.method == 'POST':
         form = RoomForm(request.POST)
         if form.is_valid():
-            form.save()
+            room = form.save(commit=False)
+            room.host = request.user
+            room.save()
             return redirect('home')
 
     return render(request, 'base/room_form.html', {'form': form})
